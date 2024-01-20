@@ -1,6 +1,8 @@
 # DuplicateFix
 
-A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that does x.
+A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that makes it so duplicated items maintain references between each other.
+
+this fixes github issue [#984](https://github.com/Yellow-Dog-Man/Resonite-Issues/issues/984)
 
 ## Installation
 1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).
