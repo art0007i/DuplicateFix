@@ -4,9 +4,6 @@ using FrooxEngine.Undo;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DuplicateFix;
 
@@ -16,7 +13,7 @@ public static class DuplicateExtensions
     // would probably do this using a transpiler but it would require some kind of additional function argument to whether it should create undo steps
     // or I could check stack traces to see if it's called from within my code but that's a little jank
 
-    public static Slot UndoableChildrenDuplicate(this Slot toDuplicate, Slot duplicateRoot = null, bool keepGlobalTransform = true)
+    public static Slot UndoableChildrenDuplicate(this Slot toDuplicate, Slot duplicateRoot = null, bool keepGlobalTransform = true, DuplicationSettings settings = null)
     {
         if (toDuplicate.IsRootSlot)
         {
@@ -30,6 +27,8 @@ public static class DuplicateExtensions
         {
             throw new Exception("Target for the duplicate hierarchy cannot be within the hierarchy of the source");
         }
+        //InternalReferences internalReferences = new InternalReferences();
+        var internalReferences = typeof(Worker).GetNestedType("InternalReferences", AccessTools.all).GetConstructor(new Type[] { }).Invoke(null);
         HashSet<ISyncRef> hashSet = Pool.BorrowHashSet<ISyncRef>();
         HashSet<Slot> hashSet2 = Pool.BorrowHashSet<Slot>();
         List<Action> postDuplication = Pool.BorrowList<Action>();
@@ -42,34 +41,33 @@ public static class DuplicateExtensions
             }
         }, includeLocal: false, cacheItems: true);
         toDuplicate.GenerateHierarchy(hashSet2);
-        //InternalReferences internalReferences = new InternalReferences();
-        var internalReferences = typeof(Worker).GetNestedType("InternalReferences", AccessTools.all).GetConstructor(new Type[] { }).Invoke(null);
-        DuplicateFix.Msg("traverse1");
+        DuplicateFix.Debug("traverse1");
         Traverse.Create(toDuplicate).Method("CollectInternalReferences", toDuplicate, internalReferences, hashSet, hashSet2).GetValue();
-        DuplicateFix.Msg("traverse2");
-        Slot slot = (Slot)Traverse.Create(toDuplicate).Method("InternalDuplicate", duplicateRoot, internalReferences, hashSet).GetValue();
+        DuplicateFix.Debug("traverse2");
+        Slot slot = (Slot)typeof(Slot).GetMethod("InternalDuplicate", AccessTools.all).Invoke(toDuplicate, new object[] { duplicateRoot, internalReferences, hashSet, settings });
         if (keepGlobalTransform)
         {
             slot.CopyTransform(toDuplicate);
         }
-        DuplicateFix.Msg("traverse3");
+        DuplicateFix.Debug("traverse3");
         Traverse.Create(internalReferences).Method("TransferReferences", false).GetValue();
         List<Component> list = Pool.BorrowList<Component>();
         slot.GetComponentsInChildren(list);
-        var runDuplicateMethod = typeof(Component).GetMethod("RunDuplicate", AccessTools.all);
         // arti stuff begin
         foreach (var child in slot.Children)
         {
             child.CreateSpawnUndoPoint();
         }
         // arti stuff end
+        var runDuplicateMethod = typeof(Component).GetMethod("RunDuplicate", AccessTools.all);
         foreach (Component item in list)
         {
             runDuplicateMethod.Invoke(item, null);
         }
         Pool.Return(ref list);
         Pool.Return(ref hashSet);
-        DuplicateFix.Msg("traverse4");
+
+        DuplicateFix.Debug("traverse4");
         Traverse.Create(internalReferences).Method("Dispose").GetValue();
         foreach (Action item2 in postDuplication)
         {

@@ -1,15 +1,9 @@
 using HarmonyLib;
 using ResoniteModLoader;
 using System;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using FrooxEngine;
 using FrooxEngine.Undo;
 using Elements.Core;
-using static OfficialAssets.Graphics;
-using static FrooxEngine.MeshEmitter;
 
 namespace DuplicateFix;
 
@@ -17,7 +11,7 @@ public class DuplicateFix : ResoniteMod
 {
     public override string Name => "DuplicateFix";
     public override string Author => "art0007i";
-    public override string Version => "1.0.0";
+    public override string Version => "1.0.1";
     public override string Link => "https://github.com/art0007i/DuplicateFix/";
 
     [AutoRegisterConfigKey]
@@ -84,7 +78,7 @@ public class DuplicateFix : ResoniteMod
             if (!config.GetValue(KEY_ENABLED)) return true;
 
             Job<Slot> task = new Job<Slot>();
-            World world = targetWorld ?? Userspace.Current.Engine.WorldManager.FocusedWorld;
+            World world = targetWorld ?? Engine.Current.WorldManager.FocusedWorld;
             world.RunSynchronously(delegate
             {
                 Slot slot = null;
@@ -149,7 +143,7 @@ public class DuplicateFix : ResoniteMod
                 }
 
                 // by the time the duplication is done the children will have already escaped using their Grabbable.OnDuplicate function
-                // so I just copied the entire duplication sequence and made it create undo steps at the correc time.. kinda jank but works
+                // so I just copied the entire duplication sequence and made it create undo steps at the correct time.. kinda jank but works
                 /*dupeHolder = __instance.Grabber.HolderSlot.Duplicate();
 
                 foreach (var child in dupeHolder.Children)
