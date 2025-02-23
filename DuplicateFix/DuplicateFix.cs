@@ -11,7 +11,7 @@ public class DuplicateFix : ResoniteMod
 {
     public override string Name => "DuplicateFix";
     public override string Author => "art0007i";
-    public override string Version => "1.0.1";
+    public override string Version => "1.0.2";
     public override string Link => "https://github.com/art0007i/DuplicateFix/";
 
     [AutoRegisterConfigKey]
@@ -73,7 +73,7 @@ public class DuplicateFix : ResoniteMod
     [HarmonyPatch(typeof(Userspace), nameof(Userspace.Paste))]
     class UserspacePastePatch
     {
-        public static bool Prefix(Userspace __instance, Job<Slot> __result, SavedGraph data, Slot source, float3 userspacePos, floatQ userspaceRot, float3 userspaceScale, World targetWorld)
+        public static bool Prefix(Userspace __instance, ref Job<Slot> __result, SavedGraph data, Slot source, float3 userspacePos, floatQ userspaceRot, float3 userspaceScale, World targetWorld)
         {
             if (!config.GetValue(KEY_ENABLED)) return true;
 
@@ -98,7 +98,7 @@ public class DuplicateFix : ResoniteMod
                     else
                     {
                         slot = world.AddSlot("Paste");
-                        slot.LoadObject(data.Root);
+                        slot.LoadObject(data.Root, null);
                         slot.GlobalPosition = globalPosition;
                         slot.GlobalRotation = globalRotation;
                         slot.GlobalScale = globalScale;

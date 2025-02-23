@@ -41,15 +41,12 @@ public static class DuplicateExtensions
             }
         }, includeLocal: false, cacheItems: true);
         toDuplicate.GenerateHierarchy(hashSet2);
-        DuplicateFix.Debug("traverse1");
         Traverse.Create(toDuplicate).Method("CollectInternalReferences", toDuplicate, internalReferences, hashSet, hashSet2).GetValue();
-        DuplicateFix.Debug("traverse2");
         Slot slot = (Slot)typeof(Slot).GetMethod("InternalDuplicate", AccessTools.all).Invoke(toDuplicate, new object[] { duplicateRoot, internalReferences, hashSet, settings });
         if (keepGlobalTransform)
         {
             slot.CopyTransform(toDuplicate);
         }
-        DuplicateFix.Debug("traverse3");
         Traverse.Create(internalReferences).Method("TransferReferences", false).GetValue();
         List<Component> list = Pool.BorrowList<Component>();
         slot.GetComponentsInChildren(list);
@@ -67,7 +64,6 @@ public static class DuplicateExtensions
         Pool.Return(ref list);
         Pool.Return(ref hashSet);
 
-        DuplicateFix.Debug("traverse4");
         Traverse.Create(internalReferences).Method("Dispose").GetValue();
         foreach (Action item2 in postDuplication)
         {
