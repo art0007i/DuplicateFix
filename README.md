@@ -1,6 +1,6 @@
 # DuplicateFix
 
-A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that makes it so duplicated items maintain references between each other.
+A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that makes it so duplicated items maintain references between each other. Also fixes references breaking when transferring objects between worlds.
 
 this fixes github issue [#984](https://github.com/Yellow-Dog-Man/Resonite-Issues/issues/984)
 
