@@ -4,6 +4,8 @@ using System;
 using FrooxEngine;
 using FrooxEngine.Undo;
 using Elements.Core;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DuplicateFix;
 
@@ -11,7 +13,7 @@ public class DuplicateFix : ResoniteMod
 {
     public override string Name => "DuplicateFix";
     public override string Author => "art0007i";
-    public override string Version => "1.0.2";
+    public override string Version => "1.0.3";
     public override string Link => "https://github.com/art0007i/DuplicateFix/";
 
     [AutoRegisterConfigKey]
@@ -127,47 +129,30 @@ public class DuplicateFix : ResoniteMod
         {
             if (!config.GetValue(KEY_ENABLED)) return true;
 
-            Slot tempHolder = null;
-            Slot dupeHolder = null;
             __instance.World.BeginUndoBatch("Undo.DuplicateGrabbed".AsLocaleKey());
+            List<Slot> toDuplicate = Pool.BorrowList<Slot>();
+            List<Slot> newSlots = Pool.BorrowList<Slot>();
             try
             {
-                tempHolder = __instance.Grabber.Slot.AddSlot("Holder");
                 foreach (IGrabbable grabbedObject in __instance.Grabber.GrabbedObjects)
                 {
                     if (__instance.Grabber.GrabbableGetComponentInParents<IDuplicateBlock>(grabbedObject.Slot, null, excludeDisabled: true) != null)
                     {
-                        grabbedObject.Slot.SetParent(tempHolder, false);
                         continue;
                     }
+                    toDuplicate.Add(grabbedObject.Slot.GetObjectRoot(__instance.Grabber.Slot));
                 }
 
-                // by the time the duplication is done the children will have already escaped using their Grabbable.OnDuplicate function
-                // so I just copied the entire duplication sequence and made it create undo steps at the correct time.. kinda jank but works
-                /*dupeHolder = __instance.Grabber.HolderSlot.Duplicate();
-
-                foreach (var child in dupeHolder.Children)
-                {
-                    child.CreateSpawnUndoPoint();
-                }*/
-                dupeHolder = __instance.Grabber.HolderSlot.UndoableChildrenDuplicate();
-
-                dupeHolder.GetComponentsInChildren<IGrabbable>().ForEach(delegate (IGrabbable g)
-                {
-                    if (g.IsGrabbed)
-                    {
-                        g.Release(g.Grabber);
-                    }
-                });
-                tempHolder.Destroy(__instance.Grabber.HolderSlot, false);
+                toDuplicate.MultiDuplicate(newSlots);
+                newSlots.Do(x => x.CreateSpawnUndoPoint());
+                newSlots.SelectMany(x => x.GetComponentsInChildren<IGrabbable>()).Do(x => { if (x.IsGrabbed) x.Release(x.Grabber); });
             }
             catch (Exception ex)
             {
                 __instance.Debug.Error("Exception duplicating items!\n" + ex);
             }
-            if (dupeHolder != null && !dupeHolder.IsRemoved) dupeHolder.Destroy(false);
-            if (tempHolder != null && !tempHolder.IsRemoved) tempHolder.Destroy(false);
-
+            Pool.Return(ref newSlots);
+            Pool.Return(ref toDuplicate);
             __instance.World.EndUndoBatch();
 
             return false;
