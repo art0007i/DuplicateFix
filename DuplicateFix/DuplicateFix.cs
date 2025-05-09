@@ -13,7 +13,7 @@ public class DuplicateFix : ResoniteMod
 {
     public override string Name => "DuplicateFix";
     public override string Author => "art0007i";
-    public override string Version => "1.0.3";
+    public override string Version => "1.0.4";
     public override string Link => "https://github.com/art0007i/DuplicateFix/";
 
     [AutoRegisterConfigKey]

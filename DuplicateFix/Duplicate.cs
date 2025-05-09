@@ -15,7 +15,7 @@ public static class DuplicateExtensions
     private static readonly MethodInfo RunDuplicate = typeof(Component).GetMethod("RunDuplicate", AccessTools.all);
 
     // Literally just a copy paste of Slot.Duplicate but it duplicates several slots at same time
-    public static void MultiDuplicate(this IEnumerable<Slot> toDuplicate, List<Slot> newSlots, Slot duplicateRoot = null, bool keepGlobalTransform = true, DuplicationSettings settings = null)
+    public static void MultiDuplicate(this IEnumerable<Slot> toDuplicate, List<Slot> newSlots, Slot duplicateRoot = null, bool keepGlobalTransform = true, DuplicationSettings settings = null, bool duplicateAsLocal = false)
     {
         if (toDuplicate.Any(x => x.IsRootSlot))
         {
@@ -41,7 +41,7 @@ public static class DuplicateExtensions
         toDuplicate.Do(x => Traverse.Create(x).Method("CollectInternalReferences", x, internalReferences, hashSet, hashSet2).GetValue());
         foreach (var slot in toDuplicate)
         {
-            newSlots.Add((Slot)typeof(Slot).GetMethod("InternalDuplicate", AccessTools.all).Invoke(slot, new object[] { duplicateRoot ?? slot.Parent ?? slot.World.RootSlot, internalReferences, hashSet, settings }));
+            newSlots.Add((Slot)typeof(Slot).GetMethod("InternalDuplicate", AccessTools.all).Invoke(slot, new object[] { duplicateRoot ?? slot.Parent ?? slot.World.RootSlot, internalReferences, hashSet, settings, duplicateAsLocal }));
         }
         if (keepGlobalTransform)
         {
